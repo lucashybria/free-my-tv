@@ -74,6 +74,7 @@
     ['nfl', /nfl/, /^nfl/i, ['#013369', '#00163D']],
     ['globoplay', /globoplay/, /globoplay/i, ['#FF8A1F', '#FF2D5A']],
     ['jellyfin', /jellyfin/i, /jellyfin/i, ['#AA5CC3', '#00A4DC']],
+    ['cinefod', /^website:cinefod$/, /^cinefod$/i, ['#6C3BE0', '#221684']],
     ['spotify', /spotify/, /spotify/i, ['#1DB954', '#0F7A36']]
   ];
   var MAX_SHELF = 8;

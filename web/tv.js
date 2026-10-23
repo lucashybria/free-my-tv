@@ -130,6 +130,9 @@ var TV = (function () {
   // Samsung's live TV viewer: it shows whichever source the TV is on (the antenna, or the HDMI picked here).
   var SAMSUNG_VIEWER = 'org.tizen.tv-viewer';
 
+  var CINEFOD_ID = 'website:cinefod';
+  var CINEFOD_URL = 'https://www.cinefod.com/';
+
   var SAMPLE = [
     ['netflix', 'Netflix', '#E50914'], ['youtube.leanback.v4', 'YouTube', '#FF0033'], ['amazon', 'Prime Video', '#1A98FF'],
     ['com.disney.disneyplus-prod', 'Disney+', '#1838C8'], ['com.hbo.hbomax', 'Max', '#6C3BE0'],
@@ -284,6 +287,10 @@ var TV = (function () {
         done(SAMPLE.map(function (s) { return {id: s[0], title: s[1], icon: '', color: s[2]}; }));
         return;
       }
+      function withWebsiteShortcut(list) {
+        list.push({id: CINEFOD_ID, title: 'Cinefod', icon: 'icons/cinefod.svg', color: '#6C3BE0'});
+        done(list);
+      }
       function list(res) {
         var out = [];
         var points = res && res.launchPoints ? res.launchPoints : [];
@@ -295,7 +302,7 @@ var TV = (function () {
         return out;
       }
       luna('luna://com.webos.applicationManager/listLaunchPoints', {}, function (res) {
-        if (res) { done(list(res)); return; }
+        if (res) { withWebsiteShortcut(list(res)); return; }
         // Denied to Developer Mode apps (webOS 6 and newer): once the TV has allowed the remote control API, it lists
         // every app with its icon; until then, the known apps the TV says it has, while the TV asks once (an answer
         // only counts from the next load on, and a "no" isn't asked again).
@@ -303,11 +310,12 @@ var TV = (function () {
         try { paired = !!localStorage.getItem(SSAP_KEY); refused = !!localStorage.getItem(SSAP_REFUSED); } catch (e) {}
         if (paired) {
           ssap('com.webos.applicationManager/listLaunchPoints', function (res2) {
-            if (res2) done(list(res2)); else knownApps(done);
+            if (res2) withWebsiteShortcut(list(res2));
+            else knownApps(withWebsiteShortcut);
           });
           return;
         }
-        knownApps(done);
+        knownApps(withWebsiteShortcut);
         if (!refused) ssap('com.webos.applicationManager/listLaunchPoints', function () {});
       });
     },
@@ -321,6 +329,15 @@ var TV = (function () {
       }
       if (!webos) {
         if (done) setTimeout(function () { done(true); }, 0);
+        return;
+      }
+      if (id === CINEFOD_ID) {
+        luna('luna://com.webos.applicationManager/launch', {
+          id: 'com.webos.app.browser',
+          params: {target: CINEFOD_URL}
+        }, function (res) {
+          if (done) done(!!res);
+        });
         return;
       }
       luna('luna://com.webos.applicationManager/launch', params ? {id: id, params: params} : {id: id}, function (res) {
